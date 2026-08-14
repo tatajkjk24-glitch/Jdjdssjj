@@ -1,0 +1,547 @@
+-- تحميل مكتبة Fluent Library
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+
+local Players = game:GetService("Players")
+local SoundService = game:GetService("SoundService")
+local VirtualUser = game:GetService("VirtualUser")
+local StarterGui = game:GetService("StarterGui")
+local RunService = game:GetService("RunService")
+local Stats = game:GetService("Stats")
+local Lighting = game:GetService("Lighting")
+local UserInputService = game:GetService("UserInputService")
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+local GuiService = game:GetService("GuiService")
+local CoreGui = game:GetService("CoreGui")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+----------------------------------------------------
+-- [الواجهة الأساسية Fluent]
+----------------------------------------------------
+local Window = Fluent:CreateWindow({
+    Title = "DARK ITACHI HUB",
+    SubTitle = "by : Dark Itachi",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(530, 360),
+    Theme = "Dark"
+})
+
+----------------------------------------------------
+-- [زر الصورة العائم لإغلاق وفتح الواجهة]
+----------------------------------------------------
+if PlayerGui:FindFirstChild("ToggleImageGui") then PlayerGui["ToggleImageGui"]:Destroy() end
+
+local toggleGui = Instance.new("ScreenGui")
+toggleGui.Name = "ToggleImageGui"
+toggleGui.ResetOnSpawn = false
+toggleGui.Parent = PlayerGui
+
+local toggleBtn = Instance.new("ImageButton", toggleGui)
+toggleBtn.Name = "ToggleBtn"
+toggleBtn.Size = UDim2.new(0, 50, 0, 50)
+toggleBtn.Position = UDim2.new(0.02, 0, 0.25, 0)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+toggleBtn.Image = "rbxassetid://120700440833984" -- يمكنك تغيير هذا الـ ID لأي صورة تريدها
+toggleBtn.Active = true
+toggleBtn.Draggable = true -- سحب وإفلات الزر في أي مكان بالشاشة
+
+Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(1, 0)
+
+local btnStroke = Instance.new("UIStroke", toggleBtn)
+btnStroke.Color = Color3.fromRGB(180, 30, 30)
+btnStroke.Thickness = 2
+
+local isVisible = true
+toggleBtn.MouseButton1Click:Connect(function()
+    isVisible = not isVisible
+    if Window and Window.Root then
+        Window.Root.Visible = isVisible
+    end
+end)
+
+----------------------------------------------------
+-- [شعار ترحيبي بسيط (Welcome Banner)]
+----------------------------------------------------
+if PlayerGui:FindFirstChild("WelcomeBannerGui") then PlayerGui["WelcomeBannerGui"]:Destroy() end
+
+local welcomeGui = Instance.new("ScreenGui")
+welcomeGui.Name = "WelcomeBannerGui"
+welcomeGui.ResetOnSpawn = false
+welcomeGui.Parent = PlayerGui
+
+local bannerFrame = Instance.new("Frame", welcomeGui)
+bannerFrame.Size = UDim2.new(0, 380, 0, 70)
+bannerFrame.Position = UDim2.new(0.5, -190, 0.15, 0)
+bannerFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+bannerFrame.BorderSizePixel = 0
+bannerFrame.ZIndex = 10
+
+Instance.new("UICorner", bannerFrame).CornerRadius = UDim.new(0, 10)
+
+local bannerStroke = Instance.new("UIStroke", bannerFrame)
+bannerStroke.Color = Color3.fromRGB(180, 30, 30)
+bannerStroke.Thickness = 2
+
+local welcomeLabel = Instance.new("TextLabel", bannerFrame)
+welcomeLabel.Size = UDim2.new(1, -20, 1, 0)
+welcomeLabel.Position = UDim2.new(0, 10, 0, 0)
+welcomeLabel.BackgroundTransparency = 1
+welcomeLabel.Text = "نورت سكربت المطور سواد~ايتاشي"
+welcomeLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+welcomeLabel.TextSize = 18
+welcomeLabel.Font = Enum.Font.GothamBold
+welcomeLabel.ZIndex = 11
+
+task.delay(3, function()
+    if welcomeGui and welcomeGui.Parent then
+        welcomeGui:Destroy()
+    end
+end)
+
+----------------------------------------------------
+-- [تتبع اللاعبين (Player Tracking System)]
+----------------------------------------------------
+local playerData = {}
+
+local function getPlayerTotalTime(userId)
+    local pInfo = playerData[userId]
+    if not pInfo then return 0 end
+    if pInfo.isOnline and pInfo.joinTime then
+        return pInfo.totalTime + (os.time() - pInfo.joinTime)
+    else
+        return pInfo.totalTime
+    end
+end
+
+local function trackPlayer(plr)
+    if not playerData[plr.UserId] then
+        playerData[plr.UserId] = {
+            totalTime = 0, joinTime = os.time(), isOnline = true, joins = 1, leaves = 0, name = plr.Name, displayName = plr.DisplayName
+        }
+    else
+        playerData[plr.UserId].joinTime = os.time()
+        playerData[plr.UserId].isOnline = true
+        playerData[plr.UserId].joins = playerData[plr.UserId].joins + 1
+    end
+end
+
+for _, plr in pairs(Players:GetPlayers()) do trackPlayer(plr) end
+Players.PlayerAdded:Connect(trackPlayer)
+
+----------------------------------------------------
+-- [مربع قارئ الفريمات والبنك والعداد]
+----------------------------------------------------
+if PlayerGui:FindFirstChild("blackBase") then PlayerGui["blackBase"]:Destroy() end
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "blackBase"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = PlayerGui
+
+local statsFrame = Instance.new("Frame", screenGui)
+statsFrame.Name = "StatsDisplay"
+statsFrame.Size = UDim2.new(0, 160, 0, 70)
+statsFrame.Position = UDim2.new(0.015, 0, 0.015, 0)
+statsFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+statsFrame.BorderSizePixel = 0
+statsFrame.Active = true
+statsFrame.Draggable = true
+
+Instance.new("UICorner", statsFrame).CornerRadius = UDim.new(0, 8)
+
+local statsStroke = Instance.new("UIStroke", statsFrame)
+statsStroke.Color = Color3.fromRGB(180, 30, 30)
+statsStroke.Thickness = 1.5
+
+local statsLayout = Instance.new("UIListLayout", statsFrame)
+statsLayout.Padding = UDim.new(0, 2)
+statsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+statsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+
+local fpsLabel = Instance.new("TextLabel", statsFrame)
+fpsLabel.Size = UDim2.new(1, -10, 0, 18)
+fpsLabel.BackgroundTransparency = 1
+fpsLabel.TextColor3 = Color3.fromRGB(0, 255, 150)
+fpsLabel.Font = Enum.Font.GothamBold
+fpsLabel.TextSize = 12
+fpsLabel.Text = "FPS: 0"
+
+local pingLabel = Instance.new("TextLabel", statsFrame)
+pingLabel.Size = UDim2.new(1, -10, 0, 18)
+pingLabel.BackgroundTransparency = 1
+pingLabel.TextColor3 = Color3.fromRGB(255, 200, 50)
+pingLabel.Font = Enum.Font.GothamBold
+pingLabel.TextSize = 12
+pingLabel.Text = "PING: 0 ms"
+
+local timeLabel = Instance.new("TextLabel", statsFrame)
+timeLabel.Size = UDim2.new(1, -10, 0, 18)
+timeLabel.BackgroundTransparency = 1
+timeLabel.TextColor3 = Color3.fromRGB(200, 220, 255)
+timeLabel.Font = Enum.Font.GothamBold
+timeLabel.TextSize = 12
+timeLabel.Text = "TIME: 00:00:00"
+
+local frameCount = 0
+local lastCheck = os.clock()
+
+RunService.RenderStepped:Connect(function()
+    frameCount = frameCount + 1
+    local currentTime = os.clock()
+    
+    if currentTime - lastCheck >= 1 then
+        local fps = math.floor(frameCount / (currentTime - lastCheck))
+        fpsLabel.Text = "FPS: " .. tostring(fps)
+        frameCount = 0
+        lastCheck = currentTime
+    end
+end)
+
+local scriptStartTime = os.time()
+
+task.spawn(function()
+    while task.wait(0.5) do
+        local ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+        pingLabel.Text = "PING: " .. tostring(ping) .. " ms"
+        
+        local elapsed = os.time() - scriptStartTime
+        local hours = math.floor(elapsed / 3600)
+        local mins = math.floor((elapsed % 3600) / 60)
+        local secs = elapsed % 60
+        
+        timeLabel.Text = string.format("TIME: %02d:%02d:%02d", hours, mins, secs)
+    end
+end)
+
+----------------------------------------------------
+-- [التبويبات]
+----------------------------------------------------
+local Tabs = {
+    Main = Window:AddTab({ Title = "الرئيسية (AFK)", Icon = "home" }),
+    Player = Window:AddTab({ Title = "اللاعب", Icon = "user" }),
+    Visuals = Window:AddTab({ Title = "المرئيات", Icon = "eye" }),
+    Samla = Window:AddTab({ Title = "سكربتات صمله", Icon = "code" }),
+    Tracker = Window:AddTab({ Title = "Tracker", Icon = "list" }),
+    Settings = Window:AddTab({ Title = "الحقوق", Icon = "info" })
+}
+
+----------------------------------------------------
+-- [تبويب الرئيسية / AFK]
+----------------------------------------------------
+Tabs.Main:AddButton({
+    Title = "JABRAIL SYSTEM V2 • إعادة الربط التلقائي",
+    Description = "حماية من انقطاع النت والطرد + إعادة دخول تلقائية",
+    Callback = function()
+        Fluent:Notify({ Title = "JABRAIL SYSTEM", Content = "نظام الحماية يعمل بنجاح ✅", Duration = 4 })
+
+        local currentPlaceId = game.PlaceId
+        local currentJobId = game.JobId
+
+        task.spawn(function()
+            while true do
+                pcall(function()
+                    local errorPrompt = CoreGui.RobloxPromptGui.promptOverlay:FindFirstChild("ErrorPrompt")
+                    if errorPrompt then
+                        errorPrompt.Visible = false
+                        GuiService:ClearError()
+                    end
+                end)
+                task.wait(0.1)
+            end
+        end)
+
+        task.spawn(function()
+            while true do
+                pcall(function()
+                    VirtualUser:CaptureController()
+                    VirtualUser:ClickButton2(Vector2.new(0,0))
+                end)
+                task.wait(10)
+            end
+        end)
+
+        task.spawn(function()
+            while true do
+                task.wait(3)
+                local isOnline = false
+                pcall(function()
+                    local response = HttpService:RequestAsync({
+                        Url = "https://httpbin.org/get",
+                        Method = "GET"
+                    })
+                    if response and response.Success then
+                        isOnline = true
+                    end
+                end)
+                
+                if isOnline then
+                    if #Players:GetPlayers() <= 1 then
+                        Fluent:Notify({ Title = "تنبيه الإنترنت", Content = "تم كشف النت! جاري إعادة إدخالك للسيرفر...", Duration = 5 })
+                        task.wait(1)
+                        pcall(function()
+                            if currentJobId and currentJobId ~= "" then
+                                TeleportService:TeleportToPlaceInstance(currentPlaceId, currentJobId, LocalPlayer)
+                            else
+                                TeleportService:Teleport(currentPlaceId, LocalPlayer)
+                            end
+                        end)
+                        break
+                    end
+                end
+            end
+        end)
+    end
+})
+
+Tabs.Main:AddButton({
+    Title = "AFK 1",
+    Description = "تشغيل سكربت Anti-AFK العام",
+    Callback = function()
+        loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-AntiAFK-v-AntiKick-V3-v-Kick-Attempt-Logger-27977"))() 
+        Fluent:Notify({ Title = "AFK 1", Content = "تم تفعيل AFK 1 بنجاح!", Duration = 3 })
+    end
+})
+
+local isLagReducerActive = false
+Tabs.Main:AddButton({
+    Title = "AFK 2 (مخفف لاق)",
+    Description = "إزالة التأثيرات وتقليل الجودة لرفع الفريمات",
+    Callback = function()
+        if not isLagReducerActive then
+            isLagReducerActive = true
+            pcall(function()
+                Lighting.GlobalShadows = false
+                Lighting.FogEnd = 9e9
+                settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+                
+                for _, obj in pairs(game:GetDescendants()) do
+                    if obj:IsA("BasePart") then
+                        obj.Material = Enum.Material.SmoothPlastic
+                        obj.Reflectance = 0
+                    elseif obj:IsA("Decal") or obj:IsA("Texture") then
+                        obj:Destroy()
+                    elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") then
+                        obj.Enabled = false
+                    end
+                end
+            end)
+            Fluent:Notify({ Title = "Boost Anti-Lag", Content = "تم تفعيل مخفف اللاق بنجاح!", Duration = 4 })
+        end
+    end
+})
+
+local swadAntiAFKActive = false
+Tabs.Main:AddButton({
+    Title = "AFK 3 (سواد)",
+    Description = "تفعيل مانع الطرد سواد",
+    Callback = function()
+        if not swadAntiAFKActive then
+            swadAntiAFKActive = true
+            LocalPlayer.Idled:Connect(function()
+                if swadAntiAFKActive then
+                    VirtualUser:CaptureController()
+                    VirtualUser:ClickButton2(Vector2.new())
+                end
+            end)
+            Fluent:Notify({ Title = "Anti-AFK SWAD", Content = "تم تفعيل مانع طرد سواد بنجاح!", Duration = 4 })
+        end
+    end
+})
+
+----------------------------------------------------
+-- [تبويب اللاعب]
+----------------------------------------------------
+Tabs.Player:AddSlider("WalkSpeed", {
+    Title = "سرعة المشي",
+    Description = "تعديل سرعة الشخصية",
+    Default = 16,
+    Min = 16,
+    Max = 150,
+    Rounding = 1,
+    Callback = function(Value)
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = Value
+        end
+    end
+})
+
+Tabs.Player:AddSlider("JumpPower", {
+    Title = "قوة القفز",
+    Description = "تعديل ارتفاع القفزة",
+    Default = 50,
+    Min = 50,
+    Max = 300,
+    Rounding = 1,
+    Callback = function(Value)
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.JumpPower = Value
+        end
+    end
+})
+
+Tabs.Player:AddToggle("InfJump", {
+    Title = "قفز لانهائي",
+    Description = "تمكين القفز بدون توقف",
+    Default = false,
+    Callback = function(Value)
+        _G.InfJump = Value
+    end
+})
+
+UserInputService.JumpRequest:Connect(function()
+    if _G.InfJump and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+    end
+end)
+
+----------------------------------------------------
+-- [تبويب المرئيات]
+----------------------------------------------------
+Tabs.Visuals:AddToggle("Fullbright", {
+    Title = "إضاءة كاملة (Fullbright)",
+    Description = "رؤية واضحة في الظلام",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            Lighting.Brightness = 2
+            Lighting.ClockTime = 14
+            Lighting.FogEnd = 100000
+        else
+            Lighting.Brightness = 1
+            Lighting.ClockTime = 12
+        end
+    end
+})
+
+Tabs.Visuals:AddToggle("EspPlayers", {
+    Title = "كاشف اللاعبين (ESP)",
+    Description = "تلوين اللاعبين لرؤيتهم بوضوح",
+    Default = false,
+    Callback = function(Value)
+        for _, v in pairs(Players:GetPlayers()) do
+            if v ~= LocalPlayer and v.Character then
+                if Value then
+                    local highlight = Instance.new("Highlight", v.Character)
+                    highlight.Name = "EspHighlight"
+                    highlight.FillColor = Color3.fromRGB(180, 30, 30)
+                else
+                    if v.Character:FindFirstChild("EspHighlight") then
+                        v.Character.EspHighlight:Destroy()
+                    end
+                end
+            end
+        end
+    end
+})
+
+----------------------------------------------------
+-- [تبويب سكربتات صمله]
+----------------------------------------------------
+Tabs.Samla:AddButton({
+    Title = "VR7 Script",
+    Description = "تشغيل سكربت VR7",
+    Callback = function()
+        loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-VR7-45290"))() 
+        Fluent:Notify({ Title = "VR7 Script", Content = "تم تفعيل VR7 Script بنجاح!", Duration = 3 })
+    end
+})
+
+----------------------------------------------------
+-- [تبويب Tracker]
+----------------------------------------------------
+local trackerParagraph = Tabs.Tracker:AddParagraph({
+    Title = "الوقت المضي:",
+    Content = "جاري الحساب..."
+})
+
+task.spawn(function()
+    while task.wait(1) do
+        local elapsed = os.time() - scriptStartTime
+        trackerParagraph:SetDesc(string.format("Time Spent: %02d:%02d:%02d", math.floor(elapsed / 3600), math.floor((elapsed % 3600) / 60), elapsed % 60))
+    end
+end)
+
+local targetPlayerName = ""
+Tabs.Tracker:AddInput("SearchUser", {
+    Title = "اسم اللاعب",
+    Default = "",
+    Placeholder = "اكتب اسم اللاعب...",
+    Numeric = false,
+    Finished = false,
+    Callback = function(Value)
+        targetPlayerName = Value
+    end
+})
+
+local leaveSound = Instance.new("Sound")
+leaveSound.SoundId = "rbxassetid://138081509"
+leaveSound.Volume = 10
+leaveSound.Parent = SoundService
+
+local trackedParagraph = nil
+
+Tabs.Tracker:AddButton({
+    Title = "بدء تتبع اللاعب",
+    Description = "يعرض تفاصيل الدخول والخروج والوقت",
+    Callback = function()
+        if targetPlayerName == "" then return end
+        local foundPlr = nil
+        for _, plr in pairs(Players:GetPlayers()) do
+            if plr.Name:lower():sub(1, #targetPlayerName) == targetPlayerName:lower() then
+                foundPlr = plr
+                break
+            end
+        end
+
+        if foundPlr then
+            if not trackedParagraph then
+                trackedParagraph = Tabs.Tracker:AddParagraph({
+                    Title = "معلومات: " .. foundPlr.Name,
+                    Content = "جاري جلب البيانات..."
+                })
+            end
+
+            task.spawn(function()
+                while foundPlr and foundPlr.Parent do
+                    local pInfo = playerData[foundPlr.UserId]
+                    if pInfo then
+                        local elapsed = getPlayerTotalTime(foundPlr.UserId)
+                        trackedParagraph:SetDesc(string.format("Joins: %d | Leaves: %d | Time: %02d:%02d:%02d", pInfo.joins, pInfo.leaves, math.floor(elapsed/3600), math.floor((elapsed%3600)/60), elapsed%60))
+                    end
+                    task.wait(1)
+                end
+            end)
+            Fluent:Notify({ Title = "Tracker", Content = "تم بدء تتبع اللاعب: " .. foundPlr.Name, Duration = 3 })
+        else
+            Fluent:Notify({ Title = "خطأ", Content = "لم يتم العثور على اللاعب!", Duration = 3 })
+        end
+    end
+})
+
+Players.PlayerRemoving:Connect(function(plr)
+    local pInfo = playerData[plr.UserId]
+    if pInfo then
+        if pInfo.isOnline and pInfo.joinTime then
+            pInfo.totalTime = pInfo.totalTime + (os.time() - pInfo.joinTime)
+            pInfo.joinTime = nil
+        end
+        pInfo.isOnline = false
+        pInfo.leaves = pInfo.leaves + 1
+    end
+
+    if targetPlayerName ~= "" and plr.Name:lower():sub(1, #targetPlayerName) == targetPlayerName:lower() then
+        leaveSound:Play()
+    end
+end)
+
+----------------------------------------------------
+-- [تبويب الحقوق]
+----------------------------------------------------
+Tabs.Settings:AddParagraph({
+    Title = "الحقوق",
+    Content = "تم تطوير هذا السكربت بواسطة سواد~ايتاشي"
+})
+
+Window:SelectTab(1)
