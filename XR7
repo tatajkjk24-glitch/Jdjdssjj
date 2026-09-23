@@ -1,0 +1,664 @@
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local VirtualUser = game:GetService("VirtualUser")
+local Lighting = game:GetService("Lighting")
+local UserInputService = game:GetService("UserInputService")
+
+local targetKey = "XR7~ON~TOP~1208"
+
+if CoreGui:FindFirstChild("XR7_Hub") then
+    CoreGui.XR7_Hub:Destroy()
+end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "XR7_Hub"
+gui.ResetOnSpawn = false
+gui.Parent = CoreGui
+
+-- دالة سحب مخصصة وسلسة تمنع القفز أو التحرك عند الضغط على العناصر الداخلية
+local function makeDraggable(frame, handle)
+    handle = handle or frame
+    local dragging = false
+    local dragInput, dragStart, startPos
+
+    local function update(input)
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+
+    handle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    handle.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+end
+
+-- زر الشعار الخارجي
+local toggleIcon = Instance.new("TextButton")
+toggleIcon.Name = "XR7_Toggle"
+toggleIcon.Size = UDim2.new(0, 50, 0, 50)
+toggleIcon.Position = UDim2.new(0.02, 0, 0.25, 0)
+toggleIcon.BackgroundColor3 = Color3.fromRGB(120, 20, 180)
+toggleIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleIcon.Text = "XR7"
+toggleIcon.Font = Enum.Font.SourceSansBold
+toggleIcon.TextSize = 18
+toggleIcon.Active = true
+toggleIcon.Visible = false
+toggleIcon.Parent = gui
+
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(1, 0)
+toggleCorner.Parent = toggleIcon
+
+makeDraggable(toggleIcon)
+
+local keyFrame = Instance.new("Frame")
+keyFrame.Size = UDim2.new(0, 300, 0, 160)
+keyFrame.Position = UDim2.new(0.5, -150, 0.5, -80)
+keyFrame.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+keyFrame.BorderSizePixel = 0
+keyFrame.Active = true
+keyFrame.Parent = gui
+
+makeDraggable(keyFrame)
+
+local keyCorner = Instance.new("UICorner")
+keyCorner.CornerRadius = UDim.new(0, 8)
+keyCorner.Parent = keyFrame
+
+local keyTitle = Instance.new("TextLabel")
+keyTitle.Size = UDim2.new(1, 0, 0, 35)
+keyTitle.BackgroundTransparency = 1
+keyTitle.Text = "XR7 Hub - Key System"
+keyTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+keyTitle.TextSize = 15
+keyTitle.Font = Enum.Font.SourceSansBold
+keyTitle.Parent = keyFrame
+
+local keyInput = Instance.new("TextBox")
+keyInput.Size = UDim2.new(0.85, 0, 0, 35)
+keyInput.Position = UDim2.new(0.075, 0, 0.3, 0)
+keyInput.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+keyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+keyInput.PlaceholderText = "حط الكي هنا..."
+keyInput.PlaceholderColor3 = Color3.fromRGB(130, 130, 130)
+keyInput.Text = ""
+keyInput.Font = Enum.Font.SourceSans
+keyInput.TextSize = 14
+keyInput.ClearTextOnFocus = false
+keyInput.Parent = keyFrame
+
+local inputCorner = Instance.new("UICorner")
+inputCorner.CornerRadius = UDim.new(0, 6)
+inputCorner.Parent = keyInput
+
+local verifyBtn = Instance.new("TextButton")
+verifyBtn.Size = UDim2.new(0.85, 0, 0, 35)
+verifyBtn.Position = UDim2.new(0.075, 0, 0.62, 0)
+verifyBtn.BackgroundColor3 = Color3.fromRGB(120, 20, 180)
+verifyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+verifyBtn.Text = "تأكيد"
+verifyBtn.Font = Enum.Font.SourceSansBold
+verifyBtn.TextSize = 15
+verifyBtn.Parent = keyFrame
+
+local btnCorner = Instance.new("UICorner")
+btnCorner.CornerRadius = UDim.new(0, 6)
+btnCorner.Parent = verifyBtn
+
+local function formatTime(sec)
+    local hrs = math.floor(sec / 3600)
+    local mins = math.floor((sec % 3600) / 60)
+    local secs = sec % 60
+    return string.format("%02d:%02d:%02d", hrs, mins, secs)
+end
+
+local function openMainHub()
+    keyFrame:Destroy()
+    toggleIcon.Visible = true
+
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Name = "MainFrame"
+    mainFrame.Size = UDim2.new(0, 320, 0, 415)
+    mainFrame.Position = UDim2.new(0.5, -160, 0.5, -207)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    mainFrame.BorderSizePixel = 0
+    mainFrame.Active = true
+    mainFrame.Parent = gui
+
+    makeDraggable(mainFrame)
+
+    local mainCorner = Instance.new("UICorner")
+    mainCorner.CornerRadius = UDim.new(0, 8)
+    mainCorner.Parent = mainFrame
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, -40, 0, 35)
+    title.Position = UDim2.new(0, 10, 0, 0)
+    title.BackgroundTransparency = 1
+    title.Text = "XR7 Hub v1.0"
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.TextSize = 16
+    title.Font = Enum.Font.SourceSansBold
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Parent = mainFrame
+
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Size = UDim2.new(0, 30, 0, 30)
+    closeBtn.Position = UDim2.new(1, -35, 0, 3)
+    closeBtn.BackgroundTransparency = 1
+    closeBtn.Text = "X"
+    closeBtn.TextColor3 = Color3.fromRGB(220, 60, 60)
+    closeBtn.TextSize = 18
+    closeBtn.Font = Enum.Font.SourceSansBold
+    closeBtn.Parent = mainFrame
+    closeBtn.MouseButton1Click:Connect(function()
+        gui:Destroy()
+    end)
+
+    toggleIcon.MouseButton1Click:Connect(function()
+        mainFrame.Visible = not mainFrame.Visible
+    end)
+
+    local function createToggle(name, posY, callback)
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(0.9, 0, 0, 32)
+        btn.Position = UDim2.new(0.05, 0, 0, posY)
+        btn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+        btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+        btn.Text = name .. " : [OFF]"
+        btn.Font = Enum.Font.SourceSansBold
+        btn.TextSize = 14
+        btn.Parent = mainFrame
+
+        local c = Instance.new("UICorner")
+        c.CornerRadius = UDim.new(0, 6)
+        c.Parent = btn
+
+        local state = false
+        btn.MouseButton1Click:Connect(function()
+            state = not state
+            if state then
+                btn.Text = name .. " : [ON]"
+                btn.BackgroundColor3 = Color3.fromRGB(120, 20, 180)
+                btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            else
+                btn.Text = name .. " : [OFF]"
+                btn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+                btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+            end
+            callback(state)
+        end)
+    end
+
+    local afkConnection
+    createToggle("Anti AFK", 40, function(enabled)
+        if enabled then
+            afkConnection = Players.LocalPlayer.Idled:Connect(function()
+                VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+                task.wait(1)
+                VirtualUser:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+            end)
+        else
+            if afkConnection then
+                afkConnection:Disconnect()
+                afkConnection = nil
+            end
+        end
+    end)
+
+    local antiKick = false
+    createToggle("Anti Kick", 80, function(enabled)
+        antiKick = enabled
+    end)
+
+    if hookmetamethod then
+        local rawHook
+        rawHook = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+            local method = getnamecallmethod()
+            if antiKick and (method == "Kick" or method == "kick") and self == Players.LocalPlayer then
+                return nil
+            end
+            return rawHook(self, ...)
+        end))
+    end
+
+    createToggle("Anti Lag", 120, function(enabled)
+        if enabled then
+            for _, obj in pairs(game:GetDescendants()) do
+                if obj:IsA("BasePart") then
+                    obj.Material = Enum.Material.Plastic
+                    obj.Reflectance = 0
+                elseif obj:IsA("Decal") or obj:IsA("Texture") then
+                    obj:Destroy()
+                elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") then
+                    obj.Enabled = false
+                end
+            end
+            Lighting.GlobalShadows = false
+        end
+    end)
+
+    local origTrans = {}
+    createToggle("X-Ray", 160, function(enabled)
+        for _, part in pairs(workspace:GetDescendants()) do
+            if part:IsA("BasePart") and not part:IsDescendantOf(Players.LocalPlayer.Character) then
+                if enabled then
+                    if not origTrans[part] then origTrans[part] = part.Transparency end
+                    part.Transparency = 0.5
+                else
+                    if origTrans[part] then
+                        part.Transparency = origTrans[part]
+                    end
+                end
+            end
+        end
+    end)
+
+    createToggle("FPS Cap (10)", 200, function(enabled)
+        if setfpscap then
+            if enabled then
+                setfpscap(10)
+            else
+                setfpscap(60)
+            end
+        end
+    end)
+
+    local timerActive = false
+    local currentSession = 0
+    local afkLoopConn = nil
+
+    createToggle("عداد الوقت + Anti-AFK", 240, function(enabled)
+        timerActive = enabled
+        
+        if enabled then
+            currentSession = 0
+            
+            if gui:FindFirstChild("TimerPanel") then
+                gui.TimerPanel:Destroy()
+            end
+
+            local floatFrame = Instance.new("Frame")
+            floatFrame.Name = "TimerPanel"
+            floatFrame.Size = UDim2.new(0, 200, 0, 80)
+            floatFrame.Position = UDim2.new(0.05, 0, 0.3, 0)
+            floatFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+            floatFrame.BorderSizePixel = 0
+            floatFrame.Active = true
+            floatFrame.Parent = gui
+
+            makeDraggable(floatFrame)
+
+            local fCorner = Instance.new("UICorner")
+            fCorner.CornerRadius = UDim.new(0, 8)
+            fCorner.Parent = floatFrame
+
+            local timeText = Instance.new("TextLabel")
+            timeText.Size = UDim2.new(1, 0, 0, 30)
+            timeText.Position = UDim2.new(0, 0, 0, 8)
+            timeText.BackgroundTransparency = 1
+            timeText.Text = "الوقت: 00:00:00"
+            timeText.TextColor3 = Color3.fromRGB(255, 255, 255)
+            timeText.TextSize = 16
+            timeText.Font = Enum.Font.SourceSansBold
+            timeText.Parent = floatFrame
+
+            local afkText = Instance.new("TextLabel")
+            afkText.Size = UDim2.new(1, 0, 0, 25)
+            afkText.Position = UDim2.new(0, 0, 0, 40)
+            afkText.BackgroundTransparency = 1
+            afkText.Text = "ANTI-AFK"
+            afkText.TextColor3 = Color3.fromRGB(40, 220, 100)
+            afkText.TextSize = 15
+            afkText.Font = Enum.Font.SourceSansBold
+            afkText.Parent = floatFrame
+
+            afkLoopConn = Players.LocalPlayer.Idled:Connect(function()
+                VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+                task.wait(1)
+                VirtualUser:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+            end)
+
+            task.spawn(function()
+                while timerActive do
+                    task.wait(1)
+                    if not timerActive then break end
+                    currentSession = currentSession + 1
+                    timeText.Text = "الوقت: " .. formatTime(currentSession)
+                end
+            end)
+        else
+            if afkLoopConn then
+                afkLoopConn:Disconnect()
+                afkLoopConn = nil
+            end
+
+            if gui:FindFirstChild("TimerPanel") then
+                gui.TimerPanel:Destroy()
+            end
+        end
+    end)
+
+    -- واجهة احتساب النقاط الحجم الكبير
+    local pointsPanelActive = false
+    local playerAddedConn, playerRemovingConn
+
+    createToggle("النقاط", 280, function(enabled)
+        pointsPanelActive = enabled
+
+        if enabled then
+            if gui:FindFirstChild("PointsPanel") then
+                gui.PointsPanel:Destroy()
+            end
+
+            local purpleFrame = Instance.new("Frame")
+            purpleFrame.Name = "PointsPanel"
+            purpleFrame.Size = UDim2.new(0, 420, 0, 350)
+            purpleFrame.Position = UDim2.new(0.5, -210, 0.5, -175)
+            purpleFrame.BackgroundColor3 = Color3.fromRGB(28, 5, 45)
+            purpleFrame.BorderSizePixel = 0
+            purpleFrame.Active = true
+            purpleFrame.ClipsDescendants = true
+            purpleFrame.Parent = gui
+
+            local pCorner = Instance.new("UICorner")
+            pCorner.CornerRadius = UDim.new(0, 12)
+            pCorner.Parent = purpleFrame
+
+            makeDraggable(purpleFrame)
+
+            local minBtn = Instance.new("TextButton")
+            minBtn.Size = UDim2.new(0, 32, 0, 32)
+            minBtn.Position = UDim2.new(1, -42, 0, 8)
+            minBtn.BackgroundColor3 = Color3.fromRGB(65, 15, 100)
+            minBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            minBtn.Text = "-"
+            minBtn.Font = Enum.Font.SourceSansBold
+            minBtn.TextSize = 22
+            minBtn.Parent = purpleFrame
+
+            local minCorner = Instance.new("UICorner")
+            minCorner.CornerRadius = UDim.new(0, 6)
+            minCorner.Parent = minBtn
+
+            local isCollapsed = false
+            minBtn.MouseButton1Click:Connect(function()
+                isCollapsed = not isCollapsed
+                if isCollapsed then
+                    purpleFrame.Size = UDim2.new(0, 420, 0, 48)
+                    minBtn.Text = "+"
+                else
+                    purpleFrame.Size = UDim2.new(0, 420, 0, 350)
+                    minBtn.Text = "-"
+                end
+            end)
+
+            local mainTitle = Instance.new("TextLabel")
+            mainTitle.Size = UDim2.new(1, -50, 0, 35)
+            mainTitle.Position = UDim2.new(0, 10, 0, 6)
+            mainTitle.BackgroundTransparency = 1
+            mainTitle.Text = "إحتساب النقاط"
+            mainTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+            mainTitle.TextSize = 22
+            mainTitle.Font = Enum.Font.SourceSansBold
+            mainTitle.TextXAlignment = Enum.TextXAlignment.Left
+            mainTitle.Parent = purpleFrame
+
+            local subTitle = Instance.new("TextLabel")
+            subTitle.Size = UDim2.new(1, 0, 0, 20)
+            subTitle.Position = UDim2.new(0, 0, 0, 45)
+            subTitle.BackgroundTransparency = 1
+            subTitle.Text = "by XR7"
+            subTitle.TextColor3 = Color3.fromRGB(180, 120, 230)
+            subTitle.TextSize = 14
+            subTitle.Font = Enum.Font.SourceSansBold
+            subTitle.Parent = purpleFrame
+
+            local myStayTime = 0
+            local myStayLabel = Instance.new("TextLabel")
+            myStayLabel.Size = UDim2.new(1, 0, 0, 30)
+            myStayLabel.Position = UDim2.new(0, 0, 0, 72)
+            myStayLabel.BackgroundTransparency = 1
+            myStayLabel.Text = "مدة بقائك : 00:00:00"
+            myStayLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            myStayLabel.TextSize = 18
+            myStayLabel.Font = Enum.Font.SourceSansBold
+            myStayLabel.Parent = purpleFrame
+
+            task.spawn(function()
+                while pointsPanelActive do
+                    task.wait(1)
+                    if not pointsPanelActive then break end
+                    myStayTime = myStayTime + 1
+                    myStayLabel.Text = "مدة بقائك : " .. formatTime(myStayTime)
+                end
+            end)
+
+            local searchBox = Instance.new("TextBox")
+            searchBox.Size = UDim2.new(0.65, 0, 0, 40)
+            searchBox.Position = UDim2.new(0.06, 0, 0, 115)
+            searchBox.BackgroundColor3 = Color3.fromRGB(50, 12, 80)
+            searchBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+            searchBox.PlaceholderText = "اسم الخصم..."
+            searchBox.PlaceholderColor3 = Color3.fromRGB(180, 150, 200)
+            searchBox.Text = ""
+            searchBox.Font = Enum.Font.SourceSansBold
+            searchBox.TextSize = 16
+            searchBox.ClearTextOnFocus = false
+            searchBox.Parent = purpleFrame
+
+            local sbCorner = Instance.new("UICorner")
+            sbCorner.CornerRadius = UDim.new(0, 8)
+            sbCorner.Parent = searchBox
+
+            local startBtn = Instance.new("TextButton")
+            startBtn.Size = UDim2.new(0.22, 0, 0, 40)
+            startBtn.Position = UDim2.new(0.73, 0, 0, 115)
+            startBtn.BackgroundColor3 = Color3.fromRGB(130, 25, 210)
+            startBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            startBtn.Text = "بدأ"
+            startBtn.Font = Enum.Font.SourceSansBold
+            startBtn.TextSize = 18
+            startBtn.Parent = purpleFrame
+
+            local startCorner = Instance.new("UICorner")
+            startCorner.CornerRadius = UDim.new(0, 8)
+            startCorner.Parent = startBtn
+
+            local cardFrame = Instance.new("Frame")
+            cardFrame.Size = UDim2.new(0.89, 0, 0, 110)
+            cardFrame.Position = UDim2.new(0.055, 0, 0, 175)
+            cardFrame.BackgroundColor3 = Color3.fromRGB(45, 10, 70)
+            cardFrame.Parent = purpleFrame
+
+            local cCorner = Instance.new("UICorner")
+            cCorner.CornerRadius = UDim.new(0, 10)
+            cCorner.Parent = cardFrame
+
+            local avatarImg = Instance.new("ImageLabel")
+            avatarImg.Size = UDim2.new(0, 60, 0, 60)
+            avatarImg.Position = UDim2.new(0.04, 0, 0.22, 0)
+            avatarImg.BackgroundColor3 = Color3.fromRGB(20, 5, 30)
+            avatarImg.BackgroundTransparency = 0
+            avatarImg.Image = "rbxassetid://0"
+            avatarImg.Parent = cardFrame
+
+            local imgCorner = Instance.new("UICorner")
+            imgCorner.CornerRadius = UDim.new(1, 0)
+            imgCorner.Parent = avatarImg
+
+            local cardName = Instance.new("TextLabel")
+            cardName.Size = UDim2.new(0.65, 0, 0, 30)
+            cardName.Position = UDim2.new(0.3, 0, 0.15, 0)
+            cardName.BackgroundTransparency = 1
+            cardName.Text = "اختر لاعب لبدء التتبع"
+            cardName.TextColor3 = Color3.fromRGB(255, 255, 255)
+            cardName.TextSize = 18
+            cardName.Font = Enum.Font.SourceSansBold
+            cardName.TextXAlignment = Enum.TextXAlignment.Left
+            cardName.Parent = cardFrame
+
+            local statsText = Instance.new("TextLabel")
+            statsText.Size = UDim2.new(0.65, 0, 0, 35)
+            statsText.Position = UDim2.new(0.3, 0, 0.52, 0)
+            statsText.BackgroundTransparency = 1
+            statsText.Text = "دخول: 0 | خروج: 0 | مدة: 00:00:00"
+            statsText.TextColor3 = Color3.fromRGB(220, 180, 255)
+            statsText.TextSize = 15
+            statsText.Font = Enum.Font.SourceSansBold
+            statsText.TextXAlignment = Enum.TextXAlignment.Left
+            statsText.Parent = cardFrame
+
+            local targetName = ""
+            local targetStaySeconds = 0
+            local inCount = 0
+            local outCount = 0
+            local isTargetInServer = false
+
+            local function updateTargetCard()
+                statsText.Text = "دخول: " .. tostring(inCount) .. " | خروج: " .. tostring(outCount) .. " | مدة: " .. formatTime(targetStaySeconds)
+            end
+
+            local function setTargetPlayer(playerObj)
+                if playerObj then
+                    targetName = playerObj.Name
+                    cardName.Text = playerObj.Name
+                    avatarImg.Image = Players:GetUserThumbnailAsync(playerObj.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+                    isTargetInServer = true
+                    inCount = 0
+                    outCount = 0
+                    targetStaySeconds = 0
+                else
+                    targetName = searchBox.Text ~= "" and searchBox.Text or "خصم"
+                    cardName.Text = targetName
+                    avatarImg.Image = "rbxassetid://0"
+                    isTargetInServer = false
+                    inCount = 0
+                    outCount = 0
+                    targetStaySeconds = 0
+                end
+                updateTargetCard()
+            end
+
+            startBtn.MouseButton1Click:Connect(function()
+                local txt = searchBox.Text:lower():gsub("%s+", "")
+                if #txt >= 1 then
+                    local matchedPlayer = nil
+                    for _, p in pairs(Players:GetPlayers()) do
+                        if p.Name:lower():sub(1, #txt) == txt or p.DisplayName:lower():sub(1, #txt) == txt then
+                            matchedPlayer = p
+                            break
+                        end
+                    end
+                    setTargetPlayer(matchedPlayer)
+                end
+            end)
+
+            playerAddedConn = Players.PlayerAdded:Connect(function(player)
+                if targetName ~= "" and (player.Name:lower() == targetName:lower() or player.DisplayName:lower() == targetName:lower()) then
+                    isTargetInServer = true
+                    inCount = inCount + 1
+                    avatarImg.Image = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+                    updateTargetCard()
+                end
+            end)
+
+            playerRemovingConn = Players.PlayerRemoving:Connect(function(player)
+                if isTargetInServer and (player.Name:lower() == targetName:lower() or player.DisplayName:lower() == targetName:lower()) then
+                    isTargetInServer = false
+                    outCount = outCount + 1
+                    updateTargetCard()
+                end
+            end)
+
+            task.spawn(function()
+                while pointsPanelActive do
+                    task.wait(1)
+                    if not pointsPanelActive then break end
+                    if isTargetInServer then
+                        targetStaySeconds = targetStaySeconds + 1
+                        updateTargetCard()
+                    end
+                end
+            end)
+        else
+            if playerAddedConn then playerAddedConn:Disconnect() end
+            if playerRemovingConn then playerRemovingConn:Disconnect() end
+
+            if gui:FindFirstChild("PointsPanel") then
+                gui.PointsPanel:Destroy()
+            end
+        end
+    end)
+
+    -- ميزة الأوتو كليك (ضغط كل 1 دقيقة)
+    local autoClickActive = false
+    createToggle("أوتو كليك (1 دقيقة)", 320, function(enabled)
+        autoClickActive = enabled
+        if enabled then
+            task.spawn(function()
+                while autoClickActive do
+                    VirtualUser:Button1Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+                    task.wait(0.1)
+                    VirtualUser:Button1Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+
+                    for i = 1, 60 do
+                        if not autoClickActive then break end
+                        task.wait(1)
+                    end
+                end
+            end)
+        end
+    end)
+
+    -- تشغيل سكربت AntiAFK & AntiKick V3 المضاف
+    local v3Loaded = false
+    createToggle("AntiAFK & Kick V3", 360, function(enabled)
+        if enabled and not v3Loaded then
+            v3Loaded = true
+            pcall(function()
+                loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-AntiAFK-v-AntiKick-V3-v-Kick-Attempt-Logger-27977"))()
+            end)
+        end
+    end)
+end
+
+verifyBtn.MouseButton1Click:Connect(function()
+    local input = keyInput.Text:gsub("%s+", "")
+    if input == targetKey then
+        openMainHub()
+    else
+        verifyBtn.Text = "الكي مو صح!"
+        verifyBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+        task.wait(1)
+        verifyBtn.Text = "تأكيد"
+        verifyBtn.BackgroundColor3 = Color3.fromRGB(120, 20, 180)
+    end
+end)
