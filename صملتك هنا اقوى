@@ -1,0 +1,183 @@
+--[ سكربت أسد (ASAD) للـ AFK الطويل وثبات الفريمات
+
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+local playerGui = localPlayer:WaitForChild("PlayerGui")
+
+-- حذف الواجهة القديمة إذا كانت موجودة
+if playerGui:FindFirstChild("AsadAfkGui") then
+    playerGui.AsadAfkGui:Destroy()
+end
+
+-- دالة تقوية الأداء وثبات الفريمات
+local function boostFPS()
+    local lighting = game:GetService("Lighting")
+    local workspace = game:GetService("Workspace")
+    local terrain = workspace:FindFirstChildOfClass("Terrain")
+
+    pcall(function()
+        lighting.GlobalShadows = false
+        lighting.FogEnd = 9e9
+        lighting.Brightness = 2
+        for _, v in ipairs(lighting:GetChildren()) do
+            if v:IsA("PostEffect") or v:IsA("BloomEffect") or v:IsA("BlurEffect") or v:IsA("ColorCorrectionEffect") or v:IsA("SunRaysEffect") then
+                v.Enabled = false
+            end
+        end
+    end)
+
+    pcall(function()
+        for _, v in ipairs(workspace:GetDescendants()) do
+            if v:IsA("BasePart") then
+                v.CastShadow = false
+                v.Material = Enum.Material.SmoothPlastic
+            elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Sparkles") then
+                v.Enabled = false
+            end
+        end
+    end)
+
+    if terrain then
+        pcall(function()
+            terrain.WaterWaveSize = 0
+            terrain.WaterWaveSpeed = 0
+        end)
+    end
+end
+
+boostFPS()
+
+-- تنظيف الذاكرة كل 5 دقائق عشان ما تنزل الفريمات وتصير 4 بعد ساعات طويلة
+task.spawn(function()
+    while true do
+        task.wait(300)
+        pcall(function()
+            collectgarbage("collect")
+            boostFPS()
+        end)
+    end
+end)
+
+-- تصميم الواجهة (خلفية سوداء وإطار أخضر)
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "AsadAfkGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 220, 0, 90)
+mainFrame.Position = UDim2.new(0.5, -110, 0.1, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+mainFrame.BorderColor3 = Color3.fromRGB(0, 255, 0)
+mainFrame.BorderSizePixel = 3
+mainFrame.Parent = screenGui
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, 0, 0, 30)
+titleLabel.Position = UDim2.new(0, 0, 0, 10)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "ASAD AFK - STABLE"
+titleLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+titleLabel.TextSize = 14
+titleLabel.Font = Enum.Font.SourceSansBold
+titleLabel.Parent = mainFrame
+
+local timerLabel = Instance.new("TextLabel")
+timerLabel.Size = UDim2.new(1, 0, 0, 40)
+timerLabel.Position = UDim2.new(0, 0, 0, 40)
+timerLabel.BackgroundTransparency = 1
+timerLabel.Text = "00:00:00"
+timerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+timerLabel.TextSize = 20
+timerLabel.Font = Enum.Font.Code
+timerLabel.Parent = mainFrame
+
+-- عداد الوقت
+task.spawn(function()
+    local startTime = tick()
+    while screenGui.Parent do
+        local currentTime = tick()
+        local elapsedTime = math.floor(currentTime - startTime)
+        
+        local hours = math.floor(elapsedTime / 3600)
+        local minutes = math.floor((elapsedTime % 3600) / 60)
+        local seconds = elapsedTime % 60
+        
+        timerLabel.Text = string.format("%02d:%02d:%02d", hours, minutes, seconds)
+        task.wait(1)
+    end
+end)
+
+-- حماية ضد الطرد بسبب الخمول (Anti-AFK)
+local camera = workspace.CurrentCamera
+task.spawn(function()
+    while task.wait(120) do
+        pcall(function()
+            camera.CFrame = camera.CFrame * CFrame.Angles(0, math.rad(1), 0)
+            task.wait(0.1)
+            camera.CFrame = camera.CFrame * CFrame.Angles(0, math.rad(-1), 0)
+        end)
+    end
+end)
+
+-- نظام تحريك الواجهة (Dragging System) متوافق مع الهواتف والكمبيوتر
+local UserInputService = game:GetService("UserInputService")
+
+local dragging
+local dragInput
+local dragStart
+local startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+mainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+mainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)
+
+local capped = false
+
+local gui = Instance.new("ScreenGui")
+gui.Parent = game:GetService("CoreGui")
+
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 160, 0, 50)
+button.Position = UDim2.new(0.5, -80, 0.5, -25)
+button.Text = "FPS: طبيعي"
+button.Parent = gui
+
+button.MouseButton1Click:Connect(function()
+    capped = not capped
+
+    if capped then
+        setfpscap(15)
+        button.Text = "FPS: 15"
+    else
+        setfpscap(999)
+        button.Text = "FPS: طبيعي"
+    end
+end)
