@@ -1,0 +1,105 @@
+‏local CoreGui = game:GetService("CoreGui")
+‏local TweenService = game:GetService("TweenService")
+‏local Players = game:GetService("Players")
+‏local Player = Players.LocalPlayer
+‏local RunService = game:GetService("RunService")
+‏local UserInputService = game:GetService("UserInputService")
+‏local Lighting = game:GetService("Lighting")
+‏
+‏-- =========================================================
+‏-- 1. شاشة الترحيب (Intro)
+‏-- =========================================================
+‏local IntroGui = Instance.new("ScreenGui")
+‏IntroGui.Name = "ITACHI_HUB_Intro"
+‏IntroGui.ResetOnSpawn = false
+‏IntroGui.DisplayOrder = 999999
+‏
+‏if syn and syn.protect_gui then
+‏    syn.protect_gui(IntroGui)
+‏    IntroGui.Parent = CoreGui
+‏elseif gethui then
+‏    IntroGui.Parent = gethui()
+‏else
+‏    IntroGui.Parent = CoreGui
+‏end
+‏
+‏local MainFrame = Instance.new("Frame")
+‏MainFrame.Size = UDim2.new(1, 0, 1, 0)
+‏MainFrame.BackgroundColor3 = Color3.fromRGB(152, 251, 152)
+‏MainFrame.BackgroundTransparency = 1
+‏MainFrame.Parent = IntroGui
+‏
+‏local UIGradient = Instance.new("UIGradient")
+‏UIGradient.Color = ColorSequence.new({
+‏    ColorSequenceKeypoint.new(0, Color3.fromRGB(5, 15, 10)),
+‏    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(20, 45, 30)),
+‏    ColorSequenceKeypoint.new(1, Color3.fromRGB(5, 15, 10))
+‏})
+‏UIGradient.Rotation = 45
+‏UIGradient.Parent = MainFrame
+‏
+‏local Container = Instance.new("Frame")
+‏Container.Size = UDim2.new(0, 350, 0, 150)
+‏Container.Position = UDim2.new(0.5, -175, 0.5, -75)
+‏Container.BackgroundTransparency = 1
+‏Container.Parent = MainFrame
+‏
+‏local Text96 = Instance.new("TextLabel")
+‏Text96.Size = UDim2.new(1, 0, 0, 40)
+‏Text96.Position = UDim2.new(0, 0, 0, 10)
+‏Text96.BackgroundTransparency = 1
+‏Text96.Text = "ITACHI HUB"
+‏Text96.TextColor3 = Color3.fromRGB(46, 204, 113)
+‏Text96.TextSize = 28
+‏Text96.Font = Enum.Font.FredokaOne
+‏Text96.TextTransparency = 1
+‏Text96.Parent = Container
+‏
+‏local LoadingText = Instance.new("TextLabel")
+‏LoadingText.Size = UDim2.new(1, 0, 0, 40)
+‏LoadingText.Position = UDim2.new(0, 0, 0, 60)
+‏LoadingText.BackgroundTransparency = 1
+‏LoadingText.Text = "جاري تحميل سكربت سواد..."
+‏LoadingText.TextColor3 = Color3.fromRGB(255, 255, 255)
+‏LoadingText.TextSize = 22
+‏LoadingText.Font = Enum.Font.GothamBold
+‏LoadingText.TextTransparency = 1
+‏LoadingText.Parent = Container
+‏
+‏task.spawn(function()
+‏    local tweenInfo = TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+‏    TweenService:Create(MainFrame, tweenInfo, {BackgroundTransparency = 0.15}):Play()
+‏    TweenService:Create(Text96, tweenInfo, {TextTransparency = 0}):Play()
+‏    TweenService:Create(LoadingText, tweenInfo, {TextTransparency = 0}):Play()
+‏
+‏    task.wait(2)
+‏
+‏    local fadeOut = TweenService:Create(MainFrame, tweenInfo, {BackgroundTransparency = 1})
+‏    TweenService:Create(Text96, tweenInfo, {TextTransparency = 1}):Play()
+‏    TweenService:Create(LoadingText, tweenInfo, {TextTransparency = 1}):Play()
+‏    fadeOut:Play()
+‏    fadeOut.Completed:Connect(function()
+‏        IntroGui:Destroy()
+‏    end)
+‏end)
+‏
+‏-- =========================================================
+‏-- 2. إعداد وتحميل مكتبة الواجهة الأساسية (UI Library)
+‏-- =========================================================
+‏local Libary = loadstring(game:HttpGet("https://pastefy.app/TmYkexTc/raw"))()
+‏
+‏local Window = Libary:MakeWindow({
+‏    Title = "ITACHI Hub",
+‏    SubTitle = "By ITACHI V1",
+‏    LoadText = "ITACHI The Beast",
+‏    Flags = "ITACHIHub_Brookhaven"
+‏})
+‏
+‏Window:AddMinimizeButton({
+‏    Button = { Image = "rbxassetid://121151669301975", BackgroundTransparency = 0 },
+‏    Corner = { CornerRadius = UDim.new(35, 1) },
+‏})
+‏
+‏-- =========================================================
+‏-- 3. الواجهة فارغة الآن جاهزة لإضافة التابات والأزرار الجديدة
+‏-- =========================================================
